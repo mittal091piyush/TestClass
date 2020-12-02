@@ -1,0 +1,34 @@
+@isTest
+public class MultiRequestMock implements HttpCalloutMock {
+    Map<String, HttpCalloutMock> requests;
+
+    public MultiRequestMock(Map<String, HttpCalloutMock> requests) {
+        this.requests = requests;
+    }
+
+    public HTTPResponse respond(HTTPRequest req) {
+        //HttpCalloutMock mock = requests.get(req.getEndpoint());
+        System.debug('request _>>>>>'+req);
+        HttpCalloutMock mock = null;
+        for (String aKey : requests.keySet()) {
+            String theEndPoint = req.getEndPoint();
+            if (String.isNotBlank(theEndPoint) && theEndPoint.indexOf(aKey) > -1) {
+                mock = requests.get(aKey);
+                break;
+            }
+        }
+        if (mock != null) {
+            return mock.respond(req);
+        } else {
+            System.debug('request _>>>>> inside ->>'+req);
+            throw new MultipleMockTestException('HTTP callout not supported for test methods');
+        }
+    }
+
+    public void addRequestMock(String url, HttpCalloutMock mock) {
+        requests.put(url, mock);
+    }
+
+    public class MultipleMockTestException extends Exception {}
+
+}
